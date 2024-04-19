@@ -62,6 +62,7 @@ Entity Registry::SpawnEntity() {
     entityId = entityCount++;
 
     Entity newEntity(entityId);
+    newEntity.registry = this;
     entitiesToBeSpawned.insert(newEntity);
 
     if (entityId >= entityComponentSignatures.size()) {

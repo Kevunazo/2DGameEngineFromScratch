@@ -80,9 +80,12 @@ void Game::Setup() {
     Entity e2 = registry->SpawnEntity();
     Entity e3 = registry->SpawnEntity();
 
+    e3.AddComponent<TransformComponent>();
+    e2.RemoveComponent<TransformComponent>();
 
-    registry->AddComponentToEntity<TransformComponent>(e1, glm::vec2(10, 5), glm::vec2(1, 2), 180.0);
-    registry->AddComponentToEntity<RigidBodyComponent>(e1, glm::vec2(100.0, 50.0));
+
+    // registry->AddComponentToEntity<TransformComponent>(e1, glm::vec2(10, 5), glm::vec2(1, 2), 180.0);
+    // registry->AddComponentToEntity<RigidBodyComponent>(e1, glm::vec2(100.0, 50.0));
 
 
 }

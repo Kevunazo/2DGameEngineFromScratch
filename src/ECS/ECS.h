@@ -36,7 +36,7 @@ class Entity {
         int id;
  
     public:
-        std::shared_ptr<Registry> registry;
+        Registry* registry;
 
         Entity(int id): id(id) {};
         int GetId() const;
@@ -49,10 +49,10 @@ class Entity {
         bool operator <(const Entity& other) const { return id < other.id; }
 
         // Component Management
-        template <typename TComponent, typename ...TArgs> void AddComponentToEntity(Entity entity, TArgs&& ...args);
-        template <typename TComponent> void RemoveComponentFromEntity(Entity entity);
-        template <typename TComponent> bool EntityHasComponent(Entity entity) const;
-        template <typename TComponent> TComponent& GetComponentFromEntity(Entity entity) const;
+        template <typename TComponent, typename ...TArgs> void AddComponent(TArgs&& ...args);
+        template <typename TComponent> void RemoveComponent();
+        template <typename TComponent> bool HasComponent() const;
+        template <typename TComponent> TComponent& GetComponent() const;
 
 };
 
@@ -244,6 +244,8 @@ void Registry::RemoveComponentFromEntity(Entity entity) {
     
     // Turn off the bit for the component signature of the entity
     entityComponentSignatures[entityId].set(componentId, false);
+
+    Logger::Log("Component of ID = " + std::to_string(Component<TComponent>::GetId()) + "  has been removed from Entity of ID = " + std::to_string(entity.GetId()));
 }
 
 /**
@@ -266,7 +268,7 @@ bool Registry::EntityHasComponent(Entity entity) const {
 template <typename TComponent> 
 TComponent& Registry::GetComponentFromEntity(Entity entity) const {
     // Get IDs
-    const auto componentId = Component<TComponent>::GetID();
+    const auto componentId = Component<TComponent>::GetId();
     const auto entityId = entity.GetId();
 
     // Find Component from Component Pools
@@ -314,6 +316,24 @@ TSystem& Registry::GetSystem() const {
     auto systemEntry = systems.find(std::type_index(typeid(TSystem)));
     // Return the value but cast it to the TSystem first
     return std::static_pointer_cast<TSystem>(systemEntry->second);
+}
+
+template <typename TComponent, typename ...TArgs> void Entity::AddComponent(TArgs&& ...args) {
+    // Funny enough passing an integer as the first param to AddComponentToEntity() (or any of the similar methods) 
+    // Like so: registry->AddComponentToEntity<TComponent>(123, std::forward<TArgs>(args)...); doesn't result
+    // in a compilation error. From what I understand it's because template argument deduction is flexible.
+    // If I were to pass a string, it does complain though.
+    registry->AddComponentToEntity<TComponent>(*this, std::forward<TArgs>(args)...);
+}
+
+template <typename TComponent> void Entity::RemoveComponent() {
+    registry->RemoveComponentFromEntity<TComponent>(*this);
+}
+template <typename TComponent> bool Entity::HasComponent() const {
+    return registry->EntityHasComponent<TComponent>(*this);
+}
+template <typename TComponent> TComponent& Entity::GetComponent() const {
+    return registry->GetComponentFromEntity<TComponent>(*this);
 }
 
 #endif
