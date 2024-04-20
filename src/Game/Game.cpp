@@ -5,11 +5,13 @@
 #include <SDL2/SDL_image.h>
 #include <glm/glm.hpp>
 
+#include <cstdlib>
 
 #include <iostream>
 #include "../Components/TransformComponent.h"
 #include "../Components/RigidBodyComponent.h"
 #include "../Systems/MovementSystem.h"
+#include "../Systems/RenderSystem.h"
 
 // Define screen dimensions
 #define SCREEN_WIDTH    600
@@ -71,6 +73,9 @@ void Game::Initialize() {
         Logger::Err("Error creating SDL renderer.");
         return;
     }
+
+     // Seed the random number generator using srand()
+    srand(time(NULL)); // Use the current time as the seed
 }
 
 /**
@@ -80,25 +85,24 @@ void Game::Setup() {
 
     // Add Systems
     registry->AddSystem<MovementSystem>();
+    registry->AddSystem<RenderSystem>();
 
     // Create initial entities
-    Entity e1 = registry->SpawnEntity();
-    Entity e2 = registry->SpawnEntity();
-    Entity e3 = registry->SpawnEntity();
+    for (int i = 0; i < 40; i++) {
+        Entity tree = registry->SpawnEntity();
 
-    // Add initial components to entities
+        double randomxpos = rand() % 500;
+        double randomypos = rand() % 500;
 
-    e1.AddComponent<TransformComponent>();
+        double randomxvel = rand() % 100 - 50;
+        double randomyvel = rand() % 100 - 50;
 
-    e2.AddComponent<RigidBodyComponent>();
+        // Add initial components to entities
+        tree.AddComponent<TransformComponent>(glm::vec2(randomxpos, randomypos), glm::vec2(1, 2), 180.0);
+        tree.AddComponent<RigidBodyComponent>(glm::vec2(randomxvel, randomyvel));
 
-    e3.AddComponent<TransformComponent>(glm::vec2(10, 5), glm::vec2(1, 2), 180.0);
-    e3.AddComponent<RigidBodyComponent>(glm::vec2(2, 2));
-
-
-    // registry->AddComponentToEntity<TransformComponent>(e1, glm::vec2(10, 5), glm::vec2(1, 2), 180.0);
-    // registry->AddComponentToEntity<RigidBodyComponent>(e1, glm::vec2(100.0, 50.0));
-
+        tree.AddComponent<SpriteComponent>("./assets/images/tree.png", renderer);
+    }
 
 }
 
@@ -181,7 +185,10 @@ void Game::Render() {
     // BG Color Mechanism :)
     RenderMovingColor();
 
-    // TODO: Render Game Objects    
+    // Render Game Objects  
+    registry->GetSystem<RenderSystem>().Update(renderer);
+
+    // Render final  
     SDL_RenderPresent(renderer);
 }
 
@@ -193,24 +200,24 @@ void Game::RenderMovingColor() {
     SDL_RenderClear(renderer);
 
 
-    SDL_SetRenderDrawColor(renderer, count -50, 100, 90, 200);
-    SDL_Rect dstRect = { 
-        static_cast<int>(100), 
-        static_cast<int>(100), 
-        16, 
-        32
-    };
+    // SDL_SetRenderDrawColor(renderer, count -50, 100, 90, 200);
+    // SDL_Rect dstRect = { 
+    //     static_cast<int>(100), 
+    //     static_cast<int>(100), 
+    //     16, 
+    //     32
+    // };
 
-    SDL_RenderFillRect(renderer, &dstRect);
+    // SDL_RenderFillRect(renderer, &dstRect);
 
-    // Drawing a PNG Texture
-    SDL_Surface* surface = IMG_Load("./assets/images/tree.png");
-    SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
-    SDL_FreeSurface(surface);
+    // // Drawing a PNG Texture
+    // SDL_Surface* surface = IMG_Load("./assets/images/tree.png");
+    // SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
+    // SDL_FreeSurface(surface);
 
-    SDL_RenderCopy(renderer, texture, NULL, &dstRect);
+    // SDL_RenderCopy(renderer, texture, NULL, &dstRect);
     
-    SDL_DestroyTexture(texture);
+    // SDL_DestroyTexture(texture);
 }
 
 /**

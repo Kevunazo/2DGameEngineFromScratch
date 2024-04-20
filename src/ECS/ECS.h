@@ -296,8 +296,6 @@ void Registry::AddSystem(TArgs&& ...args) {
         Logger::Err("Issue creating new system");
     } else {
         Logger::Success("New System Created");
-
-        newSystem->Update(1);
     }
 
     systems.insert(std::make_pair(std::type_index(typeid(TSystem)), newSystem));
