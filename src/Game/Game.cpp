@@ -9,6 +9,7 @@
 #include <iostream>
 #include "../Components/TransformComponent.h"
 #include "../Components/RigidBodyComponent.h"
+#include "../Systems/MovementSystem.h"
 
 // Define screen dimensions
 #define SCREEN_WIDTH    600
@@ -76,12 +77,23 @@ void Game::Initialize() {
  * Initialize Game Objects
 */
 void Game::Setup() {
+
+    // Add Systems
+    registry->AddSystem<MovementSystem>();
+
+    // Create initial entities
     Entity e1 = registry->SpawnEntity();
     Entity e2 = registry->SpawnEntity();
     Entity e3 = registry->SpawnEntity();
 
-    e3.AddComponent<TransformComponent>();
-    e2.RemoveComponent<TransformComponent>();
+    // Add initial components to entities
+
+    e1.AddComponent<TransformComponent>();
+
+    e2.AddComponent<RigidBodyComponent>();
+
+    e3.AddComponent<TransformComponent>(glm::vec2(10, 5), glm::vec2(1, 2), 180.0);
+    e3.AddComponent<RigidBodyComponent>(glm::vec2(2, 2));
 
 
     // registry->AddComponentToEntity<TransformComponent>(e1, glm::vec2(10, 5), glm::vec2(1, 2), 180.0);
@@ -157,14 +169,12 @@ void Game::Update() {
     // Logger::Log(std::to_string(deltaTimeSec));
     endTimeAtPreviousFrame = SDL_GetTicks();
 
-    // Update Registry
+    // Update all the systems that have to be run every frame
+    registry->GetSystem<MovementSystem>().Update(deltaTimeSec);
+
+    
+    // Update Registry ALWAYS DO AT THE END TO AVOID CONFUSION
     registry->Update();
-
-
-    // TODO: Update all the systems that have to be run every frame
-    // MovementSystem.Update();
-    // CollisionSystem.Update();
-    // DamageSystem.Update();
 }
 
 void Game::Render() {

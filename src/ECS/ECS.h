@@ -48,6 +48,10 @@ class Entity {
         bool operator >(const Entity& other) const { return id > other.id; }
         bool operator <(const Entity& other) const { return id < other.id; }
 
+        std::string toString() const {
+            return std::to_string(GetId());
+        }
+
         // Component Management
         template <typename TComponent, typename ...TArgs> void AddComponent(TArgs&& ...args);
         template <typename TComponent> void RemoveComponent();
@@ -286,8 +290,20 @@ TComponent& Registry::GetComponentFromEntity(Entity entity) const {
 template <typename TSystem, typename ...TArgs> 
 void Registry::AddSystem(TArgs&& ...args) {
     // Create new System instance
-    std::shared_ptr<TSystem> newSystem = std::make_shared(std::forward<TArgs>(args)...);
-    systems.insert(std::make_pair(std::type_index(typeid(newSystem)), newSystem));
+    std::shared_ptr<TSystem> newSystem = std::make_shared<TSystem>(std::forward<TArgs>(args)...);
+
+    if (newSystem == nullptr) {
+        Logger::Err("Issue creating new system");
+    } else {
+        Logger::Success("New System Created");
+
+        newSystem->Update(1);
+    }
+
+    systems.insert(std::make_pair(std::type_index(typeid(TSystem)), newSystem));
+
+    Logger::Log("Size of systems is now = " + std::to_string(systems.size()));
+    Logger::Log(std::type_index(typeid(TSystem)).name());
 }
 
 /**
@@ -315,7 +331,7 @@ TSystem& Registry::GetSystem() const {
     // Get System Entry (key,val) pair
     auto systemEntry = systems.find(std::type_index(typeid(TSystem)));
     // Return the value but cast it to the TSystem first
-    return std::static_pointer_cast<TSystem>(systemEntry->second);
+    return *(std::static_pointer_cast<TSystem>(systemEntry->second));
 }
 
 template <typename TComponent, typename ...TArgs> void Entity::AddComponent(TArgs&& ...args) {
