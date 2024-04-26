@@ -1,17 +1,20 @@
-#include "Game.h"
-#include "../Logger/Logger.h"
-#include "../ECS/ECS.h"
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <glm/glm.hpp>
 
 #include <cstdlib>
-
 #include <iostream>
+
+#include "Game.h"
+
 #include "../Components/TransformComponent.h"
 #include "../Components/RigidBodyComponent.h"
 #include "../Systems/MovementSystem.h"
 #include "../Systems/RenderSystem.h"
+
+
+#include "../Logger/Logger.h"
+#include "../ECS/ECS.h"
 
 // Define screen dimensions
 #define SCREEN_WIDTH    600
@@ -20,6 +23,7 @@
 Game::Game() {
     isRunning = false;
     registry = std::make_unique<Registry>();
+    assetStore = std::make_unique<AssetStore>();
     Logger::Success("Game constructor called!");
 
 }
@@ -49,18 +53,25 @@ void Game::Initialize() {
         }
     #endif
 
+    // Create window
+    window = SDL_CreateWindow("My Game... my rules",
+                                          SDL_WINDOWPOS_UNDEFINED,
+                                          SDL_WINDOWPOS_UNDEFINED,
+                                          SCREEN_WIDTH, SCREEN_HEIGHT,
+                                          SDL_WINDOW_SHOWN);
 
 
-    // Continue initialization
-    window = SDL_CreateWindow(
-        "My Game... my rules",
-        2600,
-        300,
-        // SDL_WINDOWPOS_CENTERED,
-        // SDL_WINDOWPOS_CENTERED,
-        SCREEN_WIDTH, SCREEN_HEIGHT,
-        SDL_WINDOW_SHOWN
-    );
+
+    // // Continue initialization
+    // window = SDL_CreateWindow(
+    //     "My Game... my rules",
+    //     2600,
+    //     300,
+    //     // SDL_WINDOWPOS_CENTERED,
+    //     // SDL_WINDOWPOS_CENTERED,
+    //     SCREEN_WIDTH, SCREEN_HEIGHT,
+    //     SDL_WINDOW_SHOWN
+    // );
 
     if (!window) {
         Logger::Err("Error creating SDL window.");
@@ -87,21 +98,58 @@ void Game::Setup() {
     registry->AddSystem<MovementSystem>();
     registry->AddSystem<RenderSystem>();
 
+    std::vector<std::string> pathKeysIds;
+    std::map<std::string, std::string> paths = {
+        {"bullet", "./assets/images/bullet.png"},
+        {"chopper-spritesheet", "./assets/images/chopper-spritesheet.png"},
+        {"chopper", "./assets/images/chopper.png"},
+        {"landing-base", "./assets/images/landing-base.png"},
+        {"radar", "./assets/images/radar.png"},
+        {"takeoff-base", "./assets/images/takeoff-base.png"},
+        {"tank-panther-down", "./assets/images/tank-panther-down.png"},
+        {"tank-panther-left", "./assets/images/tank-panther-left.png"},
+        {"tank-panther-right", "./assets/images/tank-panther-right.png"},
+        {"tank-panther-up", "./assets/images/tank-panther-up.png"},
+        {"tank-tiger-down", "./assets/images/tank-tiger-down.png"},
+        {"tank-tiger-left", "./assets/images/tank-tiger-left.png"},
+        {"tank-tiger-right", "./assets/images/tank-tiger-right.png"},
+        {"tank-tiger-up", "./assets/images/tank-tiger-up.png"},
+        {"tree", "./assets/images/tree.png"},
+        {"truck-ford-down", "./assets/images/truck-ford-down.png"},
+        {"truck-ford-killed", "./assets/images/truck-ford-killed.png"},
+        {"truck-ford-left", "./assets/images/truck-ford-left.png"},
+        {"truck-ford-right", "./assets/images/truck-ford-right.png"},
+        {"truck-ford-up", "./assets/images/truck-ford-up.png"}
+    };
+
+    // Add the sprite sources to the asset store
+    for (auto path: paths) {
+        assetStore->AddTexture(renderer, path.first, path.second);
+        pathKeysIds.emplace_back(path.first);
+    }
+
     // Create initial entities
-    for (int i = 0; i < 40; i++) {
+    for (int i = 0; i < 20; i++) {
         Entity tree = registry->SpawnEntity();
 
         double randomxpos = rand() % 500;
         double randomypos = rand() % 500;
 
-        double randomxvel = rand() % 100 - 50;
-        double randomyvel = rand() % 100 - 50;
+        double randoxscale = rand() % 4;
+        double randomyscale = rand() % 4;
+
+        double randomrotation = rand() % 360;
+
+        double randomxvel = rand() % 200 - 100;
+        double randomyvel = rand() % 200 - 100;
+
+        int randPathIndex = rand() % 20;
 
         // Add initial components to entities
-        tree.AddComponent<TransformComponent>(glm::vec2(randomxpos, randomypos), glm::vec2(1, 2), 180.0);
+        tree.AddComponent<TransformComponent>(glm::vec2(randomxpos, randomypos), glm::vec2(1, 1), randomrotation);
         tree.AddComponent<RigidBodyComponent>(glm::vec2(randomxvel, randomyvel));
 
-        tree.AddComponent<SpriteComponent>("./assets/images/tree.png", renderer);
+        tree.AddComponent<SpriteComponent>(pathKeysIds[randPathIndex], 50, 50);
     }
 
 }
@@ -186,7 +234,7 @@ void Game::Render() {
     RenderMovingColor();
 
     // Render Game Objects  
-    registry->GetSystem<RenderSystem>().Update(renderer);
+    registry->GetSystem<RenderSystem>().Update(renderer, assetStore);
 
     // Render final  
     SDL_RenderPresent(renderer);

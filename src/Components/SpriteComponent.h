@@ -9,16 +9,23 @@ using vec2 = glm::vec2;
 
 
 struct SpriteComponent {
-    SDL_Texture* texture;
+    std::string assetId;
+    double width;
+    double height;
+    SDL_Rect srcRect;
 
     SpriteComponent(
-        const char * fileLocation = "",
-        SDL_Renderer* renderer = nullptr
+        std::string assetId = "",
+        int width = 0,
+        int height = 0,
+        int srcRectX = 0,
+        int srcRectY = 0
     ) {
-        SDL_Surface* surface = IMG_Load(fileLocation);
-        this->texture = SDL_CreateTextureFromSurface(renderer, surface);
+        this->assetId = assetId;
+        this->width = width;
+        this->height = height;
 
-        SDL_FreeSurface(surface);
+        this->srcRect = {srcRectX, srcRectY, width, height};
     }
 };
 

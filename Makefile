@@ -9,7 +9,7 @@ SORUCE_FILES = src/*.cpp \
 			   src/Game/*.cpp \
 			   src/Logger/*.cpp \
 			   src/ECS/*.cpp \
-			   src/Components/*.h \
+			   src/AssetStore/*.cpp \
 
 
 LINKER_FLAGS = -lSDL2 \

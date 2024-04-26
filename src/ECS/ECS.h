@@ -155,7 +155,7 @@ class Registry {
 
 
     public:
-        Registry() = default;
+        Registry();
         ~Registry();
 
         //////// Entities ////////

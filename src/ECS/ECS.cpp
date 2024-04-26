@@ -50,8 +50,12 @@ const Signature& System::GetComponentSignature() const {
 /////////////////////////////// Registry ///////////////////////////////
 ////////////////////////////////////////////////////////////////////////
 
+Registry::Registry() {
+    Logger::Success("Registry constructor called!");
+}
+
 Registry::~Registry() {
-    Logger::Err("Registry destructor called!");;
+    Logger::Success("Registry destructor called!");
 }
 
 /**
